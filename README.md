@@ -2,6 +2,12 @@
 
 Ruby code to dynamically update android virtual device instance from gpsd
 
+Socket connections are opened to both GPSD and ADB for AVD.
+
+GPSD is configured to send periodic location fixes in json formatted messages.
+
+GPS location is updated via ADB connection when fixes are received from GPSD.
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -20,7 +26,23 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+1) Start Android Virtual Device (AVD) using Android Emulator:
+   .../Android/Sdk/tools/emulator -avd Nexus_7_API_23
+
+2) Start / Verify gpsd daemon is operating and GPS device is connected
+
+3) Start AVD_Controller:
+   ruby avd_cntrlr
+
+4) Correct GPS coordinates should be available to Android Apps executing in 
+   Android Virtual Device instance
+
+
+Note:
+  So far, were hard coded to use:
+    GPSD    - 127.0.0.1:2947
+    AVD/ADB - 127.0.0.1:5554
+
 
 ## Contributing
 

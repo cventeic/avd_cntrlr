@@ -1,3 +1,61 @@
 #!/usr/bin/env ruby
 
+# Note path is added automatically when gem is install
+#   so this is only for testing
+if true
+  lp = File.expand_path(File.dirname(__FILE__))
+  lp = lp + "/../lib"
+  unless $LOAD_PATH.include?(lp)
+    $LOAD_PATH.unshift(lp)
+  end
+
+  puts "load path"
+  puts $LOAD_PATH
+end
+
+require 'cool.io'
+require 'cool.io/dsl'
+require 'yajl'
+require 'net-telnet'
+require 'ostruct'
+require 'ap'
+
 require 'avd_cntrlr'
+
+# To start emulator
+# ~/Android/Sdk/tools/emulator -avd Nexus_7_API_23
+
+
+auth_token = AvdCntrlr::read_avd_auth_token()
+
+avd = AvdCntrlr::AvdComms.new(auth_token:auth_token, host:'127.0.0.1', port:'5554')
+avd.connect_to_avd()
+
+gpsd = AvdCntrlr::GpsdParser.new(addr: '127.0.0.1', port: 2947)
+
+
+cool.io.connect gpsd.addr, gpsd.port do
+  on_connect do
+    puts "Connected"
+    write gpsd.config_string
+  end
+
+  on_read do |msg|
+    location = gpsd.extract_location(msg)
+
+    avd.send_fix(location)
+  end
+
+  on_resolve_failed do
+    puts "Error: Couldn't resolve #{remote_host}"
+  end
+
+  on_connect_failed do
+    puts "Error: Connection refused to #{remote_host}:#{remote_port}"
+  end
+
+end
+
+puts "Running"
+cool.io.run
+
